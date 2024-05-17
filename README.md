@@ -1,6 +1,9 @@
 # Python based Jetbrains IDE logo replacer script
 
 ## How to use
+Required dependency: python, pillow
+
+If you want to make patcher download image from web, you need requests module.
 ```sh
 python main.py \
   [-w image_url_to_replace | -i image_path_to_replace] \
