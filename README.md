@@ -1,5 +1,7 @@
 # Python based Jetbrains IDE logo replacer script
 
+## Use this at your risk!!!
+
 ## How to use
 Required dependency: python, pillow
 
