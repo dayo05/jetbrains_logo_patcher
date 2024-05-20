@@ -21,10 +21,33 @@ parser.add_argument('-w', '--web-image', dest='web_image', help='Image from web'
 args = parser.parse_args()
 
 search_list = [
+    # IntellIJ Community(2024), inside app.jar
     'idea_community_logo.png',
     'idea_community_logo@2x.png',
+
+    # IntellIJ Ultimate(2024), inside product.jar
     'idea_logo@2x.png',
-    'idea_logo@2x.png'
+    'idea_logo@2x.png',
+
+    # Rider(2024), inside product.jar
+    'rider/artwork/release/splash.png',
+    'rider/artwork/release/splash@2x.png',
+
+    # CLion(2024), inside product.jar
+    'artwork/clion_splash.png',
+    'artwork/clion_splash@2x.png'
+    
+    # PyCharm Community(2024), inside app-client.jar
+    'pycharm_core_logo.png',
+    'pycharm_core_logo@2x.png'
+
+    # RustRover(2024), inside product.jar
+    'artwork/splash.png',
+    'artwork/splash@2x.png',
+
+    # WebStorm(2023, 2024), inside app.jar
+    'artwork/webide_logo.png',
+    'artwork/webide_logo@2x.png',
 ]
 
 
