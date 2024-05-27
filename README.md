@@ -21,7 +21,7 @@ python main.py \
 > ~/Applications/your_idea_appfile.app/Contents/lib/jar_file_here.jar
  
 ## What Jar to patch?
-=> Its highly dependent to your environment/IDEs. But usually `app.jar` or `product.jar`
+=> Its highly dependent to your environment/IDEs. But usually `app.jar` or `product.jar`. See [here](https://github.com/dayo05/jetbrains_logo_patcher/blob/37224b43931bf2a0e17b23c75664c40e196ff742/main.py#L24)
 > I have plan to detect this with script.
 
 ## TODOs
