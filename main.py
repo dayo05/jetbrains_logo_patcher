@@ -18,6 +18,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-t', '--target', dest='target', help='Location of idea')
 parser.add_argument('-i', '--image', dest='image', help='Image file to replace')
 parser.add_argument('-w', '--web-image', dest='web_image', help='Image from web')
+parser.add_argument('-m', '--method', dest='method', default='keep_resolution', help='keep_resolution or resize')
 args = parser.parse_args()
 
 search_list = [
@@ -55,7 +56,17 @@ class Patcher:
     def __init__(self, target):
         self.target = target
 
-    def patch(self, rp_image):
+    @staticmethod
+    def add_margin(pil_img, top, right, bottom, left, color):
+        print(f"AM {top} {right} {bottom} {left}")
+        width, height = pil_img.size
+        new_width = width + right + left
+        new_height = height + top + bottom
+        result = Image.new(pil_img.mode, (new_width, new_height), color)
+        result.paste(pil_img, (left, top))
+        return result
+
+    def patch(self, rp_image, transform_mode="resize"):
         bd = os.getcwd()
         tmpdir = os.path.join(bd, "tmp_patch")
         if not os.path.exists(tmpdir):
@@ -77,9 +88,19 @@ class Patcher:
                 image = Image.open(x)
                 sz = image.size
                 image.close()
-                t = rp_image.resize(sz)
-                os.remove(x)
-                t.save(x)
+
+                if transform_mode == "resize":
+                    t = rp_image.resize(sz)
+                    os.remove(x)
+                    t.save(x)
+                elif transform_mode == "keep_resolution":
+                    xs, ys = rp_image.size
+                    exs, eys = min(sz[0], sz[1] * xs // ys), min(sz[0] * ys // xs, sz[1])
+                    t = Patcher.add_margin(rp_image.resize((exs, eys)), (sz[1] - eys) // 2, (sz[0] - exs) // 2, (sz[1] - eys) // 2, (sz[0] - exs) // 2, 0)
+                    print(f"{sz} | {exs}, {eys} | {rp_image.size} | {t.size}")
+                    os.remove(x)
+                    t.save(x)
+
             subprocess.run(['jar', '-uvf', file_name] + tg)
             os.remove(self.target)
             shutil.copyfile(file_name, self.target)
@@ -101,5 +122,5 @@ else:
     rs = Image.open(args.image)
 
 print("Begin patch")
-p.patch(rs)
+p.patch(rs, args.method)
 print("Done")
