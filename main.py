@@ -58,7 +58,6 @@ class Patcher:
 
     @staticmethod
     def add_margin(pil_img, top, right, bottom, left, color):
-        print(f"AM {top} {right} {bottom} {left}")
         width, height = pil_img.size
         new_width = width + right + left
         new_height = height + top + bottom
@@ -97,7 +96,6 @@ class Patcher:
                     xs, ys = rp_image.size
                     exs, eys = min(sz[0], sz[1] * xs // ys), min(sz[0] * ys // xs, sz[1])
                     t = Patcher.add_margin(rp_image.resize((exs, eys)), (sz[1] - eys) // 2, (sz[0] - exs) // 2, (sz[1] - eys) // 2, (sz[0] - exs) // 2, 0)
-                    print(f"{sz} | {exs}, {eys} | {rp_image.size} | {t.size}")
                     os.remove(x)
                     t.save(x)
 
