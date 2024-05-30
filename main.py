@@ -2,6 +2,7 @@ import os
 import shutil
 import argparse
 import subprocess
+import platform
 from PIL import Image
 
 '''
@@ -23,38 +24,43 @@ args = parser.parse_args()
 
 search_list = [
     # IntellIJ Community(2024), inside app.jar
-    'idea_community_logo.png',
-    'idea_community_logo@2x.png',
+    ('app.jar', ['idea_community_logo.png', 'idea_community_logo@2x.png']),
 
     # IntellIJ Ultimate(2024), inside product.jar
-    'idea_logo@2x.png',
-    'idea_logo@2x.png',
+    ('product.jar', ['idea_logo.png', 'idea_logo@2x.png']),
 
     # Rider(2024), inside product.jar
-    'rider/artwork/release/splash.png',
-    'rider/artwork/release/splash@2x.png',
+    ('product.jar', ['rider/artwork/release/splash.png', 'rider/artwork/release/splash@2x.png']),
 
     # CLion(2024), inside product.jar
-    'artwork/clion_splash.png',
-    'artwork/clion_splash@2x.png'
+    ('product.jar', ['artwork/clion_splash.png', 'artwork/clion_splash@2x.png']),
     
     # PyCharm Community(2024), inside app-client.jar
-    'pycharm_core_logo.png',
-    'pycharm_core_logo@2x.png'
+    ('app-client.jar', ['pycharm_core_logo.png', 'pycharm_core_logo@2x.png']),
 
     # RustRover(2024), inside product.jar
-    'artwork/splash.png',
-    'artwork/splash@2x.png',
+    ('product.jar', ['artwork/splash.png', 'artwork/splash@2x.png']),
 
     # WebStorm(2023, 2024), inside app.jar
-    'artwork/webide_logo.png',
-    'artwork/webide_logo@2x.png',
+    ('app.jar', ['artwork/webide_logo.png', 'artwork/webide_logo@2x.png']),
 ]
 
 
 class Patcher:
     def __init__(self, target):
-        self.target = target
+        if platform.system() == "Darwin":
+            target = os.path.join(target, 'Contents')
+        target = os.path.join(target, 'lib')
+
+        self.target = []
+        for x in search_list:
+            jf = os.path.join(target, x[0])
+            result = subprocess.run(['jar', '-tf', jf], capture_output=True, text=True)
+
+            for sp in result.stdout.split('\n'):
+                if sp in x[1]:
+                    self.target.append((jf, sp))
+                    print(f'Found {sp} at {x[0]}')
 
     @staticmethod
     def add_margin(pil_img, top, right, bottom, left, color):
@@ -71,37 +77,31 @@ class Patcher:
         if not os.path.exists(tmpdir):
             os.mkdir(tmpdir)
 
-        file_name = os.path.basename(self.target)
-        shutil.copyfile(self.target, os.path.join(tmpdir, file_name))
         os.chdir(tmpdir)
-        result = subprocess.run(['jar', '-tf', file_name], capture_output=True, text=True)
 
-        tg = []
-        for x in result.stdout.split('\n'):
-            if x in search_list:
-                tg.append(x)
+        for j, img_path in self.target:
+            file_name = os.path.join(tmpdir, os.path.basename(j))
+            shutil.copyfile(j, file_name)
 
-        if len(tg) != 0:
-            subprocess.run(['jar', '-xvf', file_name] + tg)
-            for x in tg:
-                image = Image.open(x)
-                sz = image.size
-                image.close()
+            subprocess.run(['jar', '-xvf', file_name, img_path])
+            image = Image.open(img_path)
+            sz = image.size
+            image.close()
 
-                if transform_mode == "resize":
-                    t = rp_image.resize(sz)
-                    os.remove(x)
-                    t.save(x)
-                elif transform_mode == "keep_resolution":
-                    xs, ys = rp_image.size
-                    exs, eys = min(sz[0], sz[1] * xs // ys), min(sz[0] * ys // xs, sz[1])
-                    t = Patcher.add_margin(rp_image.resize((exs, eys)), (sz[1] - eys) // 2, (sz[0] - exs) // 2, (sz[1] - eys) // 2, (sz[0] - exs) // 2, 0)
-                    os.remove(x)
-                    t.save(x)
+            if transform_mode == "resize":
+                t = rp_image.resize(sz)
+                os.remove(img_path)
+                t.save(img_path)
+            elif transform_mode == "keep_resolution":
+                xs, ys = rp_image.size
+                exs, eys = min(sz[0], sz[1] * xs // ys), min(sz[0] * ys // xs, sz[1])
+                t = Patcher.add_margin(rp_image.resize((exs, eys)), (sz[1] - eys) // 2, (sz[0] - exs) // 2, (sz[1] - eys) // 2, (sz[0] - exs) // 2, 0)
+                os.remove(img_path)
+                t.save(img_path)
 
-            subprocess.run(['jar', '-uvf', file_name] + tg)
-            os.remove(self.target)
-            shutil.copyfile(file_name, self.target)
+            subprocess.run(['jar', '-uvf', file_name, img_path])
+            os.remove(j)
+            shutil.copyfile(file_name, j)
 
         os.chdir(bd)
         shutil.rmtree(tmpdir)
